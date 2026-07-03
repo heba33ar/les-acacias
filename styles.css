@@ -623,6 +623,39 @@ section { scroll-margin-top: 84px; }
 }
 
 /* ============================================================
+   Bon à savoir — règles de la maison
+   ============================================================ */
+.rules {
+  background: var(--paper-deep);
+  padding: clamp(5rem, 9vw, 8rem) var(--gutter);
+}
+.rules-inner { max-width: var(--frame); margin: 0 auto; }
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(2rem, 4vw, 4rem);
+}
+.rules-block h3 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+.rules-block ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.rules-block li {
+  border-top: 1px solid var(--line);
+  padding: .8rem 0;
+  font-size: .92rem;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 720px) {
+  .rules-grid { grid-template-columns: 1fr; gap: 2rem; }
+}
+
+/* ============================================================
    Contact
    ============================================================ */
 .contact { padding: clamp(5rem, 9vw, 8rem) var(--gutter); }
