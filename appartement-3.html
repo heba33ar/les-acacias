@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>T2 Terrasse — Les Acacias · Caveirac</title>
+  <meta name="description" content="T2 Terrasse — appartement de charme pour 4 personnes, 1 chambre, douche à l'italienne et terrasse ombragée aux Acacias à Caveirac." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html#top" class="brand">
+        <span class="brand-mark">Les Acacias</span>
+        <span class="brand-sub" data-i18n="brand.sub">Caveirac · Gard</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html#apartments" data-i18n="nav.apartments">Les appartements</a>
+        <a href="index.html#contact" data-i18n="nav.contact">Contact</a>
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" class="lang-btn active" data-lang="fr">FR</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="detail">
+      <a href="index.html#apartments" class="back-link" data-i18n="nav.back">← Retour à l’accueil</a>
+
+      <div class="detail-head">
+        <h1 data-i18n="apt.3.name">T2 Terrasse</h1>
+        <p class="apt-meta" data-i18n="apt.3.meta">4 personnes · 1 chambre · Terrasse</p>
+        <p class="apt-price" data-apt-price="3" data-price-format="long"></p>
+        <p data-i18n="apt.3.desc">
+          Un appartement plus intime d'une chambre, pour deux à quatre personnes, avec douche à l'italienne et terrasse ombragée — idéal pour une escapade en couple.
+        </p>
+        <a href="index.html#reserve" class="btn btn-primary" data-i18n="det.book">Réserver cet appartement</a>
+      </div>
+
+      <h2 class="detail-sub" data-i18n="det.facilities">Équipements de l’appartement</h2>
+      <ul class="facilities">
+        <li data-i18n="det.f1">Cuisine entièrement équipée</li>
+        <li data-i18n="det.f2">Climatisation</li>
+        <li data-i18n="det.f3">Wi-Fi haut débit gratuit</li>
+        <li data-i18n="det.f4">Salle de bains privative</li>
+        <li data-i18n="det.f5">Terrasse privative</li>
+        <li data-i18n="det.f6">Télévision écran plat</li>
+        <li data-i18n="det.f7">Linge de maison et serviettes fournis</li>
+        <li data-i18n="det.f8">Accès à la piscine et au jardin</li>
+        <li data-i18n="det.f9">Parking privé clos</li>
+      </ul>
+
+      <h2 class="detail-sub" data-i18n="det.gallery">Photos</h2>
+      <div class="apt-gallery" data-folder="apartment-3"></div>
+    </section>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <button class="lightbox-close" id="lightbox-close" aria-label="Fermer">×</button>
+      <button class="lightbox-prev" id="lightbox-prev" aria-label="Précédent">‹</button>
+      <button class="lightbox-next" id="lightbox-next" aria-label="Suivant">›</button>
+      <img class="lightbox-img" id="lightbox-img" alt="" />
+      <div class="lightbox-counter" id="lightbox-counter"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Les Acacias · Caveirac</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
