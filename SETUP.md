@@ -97,8 +97,13 @@ Il repose sur Supabase (gratuit). Comptez 15 minutes.
 
 ## 3. Brancher le site
 
-1. **Project Settings → API** : copiez **Project URL** et la clé
-   **anon public** (pas la service_role !).
+1. Dans **Project Settings**, copiez deux valeurs :
+   - **Data API** → la **Project URL** (`https://xxxxx.supabase.co`) ;
+   - **API Keys** → la clé publique : soit **anon public** (`eyJ…`),
+     soit, sur les projets récents, la clé **publishable**
+     (`sb_publishable_…`) — c'est la même chose.
+   ⚠️ Jamais la clé **service_role** / **secret** (`sb_secret_…`) :
+   celle-là doit rester privée.
 2. Ouvrez le fichier `config.js` du site et collez les deux valeurs.
    La clé « anon » est faite pour être publique : elle ne permet que la
    lecture. Commitez et pushez — Vercel redéploie tout seul.

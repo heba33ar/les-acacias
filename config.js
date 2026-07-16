@@ -7,6 +7,6 @@
 // photos et tarifs écrits dans le code : rien ne casse.
 // ============================================================
 window.ACACIAS_SUPABASE = {
-  url: '',      // ex. 'https://abcdefgh.supabase.co'
-  anonKey: '',  // Project Settings → API → anon public
+  url: 'https://ndeitdrafgosaghgvoas.supabase.co/rest/v1/',      // ex. 'https://abcdefgh.supabase.co'
+  anonKey: 'sb_publishable__5PReFKzKz9w2k7xsO0fJQ_jlEZAK8w',  // Project Settings → API → anon public
 };
