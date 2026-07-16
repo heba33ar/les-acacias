@@ -612,6 +612,15 @@ section { scroll-margin-top: 84px; }
   font-size: .9rem;
   margin: 1.25rem 0 0;
 }
+.booking-availability {
+  font-size: .85rem;
+  letter-spacing: .06em;
+  margin: 1rem 0 0;
+  min-height: 1.2em;
+  color: var(--cream-soft);
+}
+.booking-availability.ok { color: #a9c9a4; }
+.booking-availability.ko { color: #e8a894; }
 .booking-submit { margin-top: 1.75rem; width: 100%; }
 .reserve .btn-primary {
   background: var(--cream);
@@ -764,6 +773,115 @@ section { scroll-margin-top: 84px; }
   transition: opacity .35s ease;
 }
 .apt-gallery button:hover img { opacity: .85; }
+
+/* ============================================================
+   Calendrier de disponibilités (pages appartement)
+   ============================================================ */
+.cal-section {
+  max-width: 60rem;
+  margin: 0 auto;
+}
+.cal-section[hidden] { display: none; }
+.availability-cal { position: relative; }
+.cal-nav {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: .5rem;
+}
+.cal-nav button {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background .25s ease, color .25s ease;
+}
+.cal-nav button:hover:not(:disabled) { background: var(--pine); color: var(--cream); }
+.cal-nav button:disabled { opacity: .3; cursor: default; }
+.cal-months {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+}
+.cal-month-label {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+  text-transform: capitalize;
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+  font-size: .82rem;
+}
+.cal-dayname {
+  font-size: .62rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  color: var(--stone);
+  padding: .3rem 0;
+}
+.cal-day {
+  padding: .45rem 0;
+  background: rgba(68, 97, 78, 0.08);
+  color: var(--ink);
+}
+.cal-day.busy {
+  background: var(--paper-deep);
+  color: var(--stone);
+  text-decoration: line-through;
+}
+.cal-day.past {
+  background: transparent;
+  color: var(--stone);
+}
+.cal-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: .5rem 1rem;
+  font-size: .8rem;
+  color: var(--ink-soft);
+  margin: 1.25rem 0 0;
+}
+.cal-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  background: rgba(68, 97, 78, 0.25);
+}
+.cal-dot.busy { background: var(--paper-deep); border: 1px solid var(--line); }
+.cal-legend-note { flex-basis: 100%; color: var(--stone); }
+
+@media (max-width: 720px) {
+  .cal-months { grid-template-columns: 1fr; }
+  .cal-months .cal-month:last-child { display: none; }
+}
+
+/* ============================================================
+   Pages Événements & Piscine
+   ============================================================ */
+.exp-cards { grid-template-columns: 1fr 1fr; }
+.exp-cards .apt-card-photo { aspect-ratio: 16 / 10; }
+.experiences { padding-top: clamp(5rem, 9vw, 8rem); }
+.pool-photo {
+  aspect-ratio: 21 / 9;
+  background: url('photos/hero.jpg') center/cover no-repeat,
+              linear-gradient(160deg, var(--paper-deep), var(--stone));
+  margin-top: 2rem;
+}
+.detail .property-grid { margin: 3rem 0 0; }
+
+@media (max-width: 960px) {
+  .exp-cards { grid-template-columns: 1fr; }
+}
 
 /* ============================================================
    Visionneuse (lightbox)

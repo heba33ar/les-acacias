@@ -20,9 +20,10 @@
       <nav class="nav">
         <a href="#apartments" data-i18n="nav.apartments">Les appartements</a>
         <a href="#domaine" data-i18n="nav.domaine">Le domaine</a>
-        <a href="#location" data-i18n="nav.location">Le lieu</a>
+        <a href="evenements.html" data-i18n="nav.events">Événements</a>
+        <a href="piscine.html" data-i18n="nav.pool">Piscine</a>
         <a href="#contact" data-i18n="nav.contact">Contact</a>
-        <a href="#reserve" class="btn btn-primary btn-small" data-i18n="hero.reserve">Réserver</a>
+        <a href="#reserve" class="btn btn-primary btn-small" data-i18n="hero.reserve" style="color: aliceblue;">Réserver</a>
         <div class="lang-toggle" role="group" aria-label="Language">
           <button type="button" class="lang-btn active" data-lang="fr">FR</button>
           <button type="button" class="lang-btn" data-lang="en">EN</button>
@@ -34,7 +35,7 @@
   <main id="top">
     <!-- Héros -->
     <section class="hero">
-      <div class="hero-media" role="img" aria-label="Les Acacias — la piscine et le jardin"></div>
+      <div class="hero-media" data-photo="hero" role="img" aria-label="Les Acacias — la piscine et le jardin"></div>
       <div class="hero-content">
         <p class="eyebrow" data-i18n="hero.eyebrow">Petite résidence · Aux portes de Nîmes</p>
         <h1 data-i18n="hero.title">Trois appartements de charme, piscine à débordement et jardin baigné de soleil.</h1>
@@ -64,7 +65,7 @@
       </div>
       <div class="apt-cards">
         <a class="apt-card reveal" href="appartement-1.html">
-          <div class="apt-card-photo" style="--cover: url('photos/apartment-1/01.jpg')"></div>
+          <div class="apt-card-photo" data-photo="cover-1" style="--cover: url('photos/apartment-1/01.jpg')"></div>
           <div class="apt-card-body">
             <span class="apt-index">01</span>
             <h3 data-i18n="apt.1.name">T3 Confort</h3>
@@ -75,7 +76,7 @@
           </div>
         </a>
         <a class="apt-card reveal" href="appartement-2.html">
-          <div class="apt-card-photo" style="--cover: url('photos/apartment-2/01.jpg')"></div>
+          <div class="apt-card-photo" data-photo="cover-2" style="--cover: url('photos/apartment-2/01.jpg')"></div>
           <div class="apt-card-body">
             <span class="apt-index">02</span>
             <h3 data-i18n="apt.2.name">T3 Terrasse</h3>
@@ -86,7 +87,7 @@
           </div>
         </a>
         <a class="apt-card reveal" href="appartement-3.html">
-          <div class="apt-card-photo" style="--cover: url('photos/apartment-3/01.jpg')"></div>
+          <div class="apt-card-photo" data-photo="cover-3" style="--cover: url('photos/apartment-3/01.jpg')"></div>
           <div class="apt-card-body">
             <span class="apt-index">03</span>
             <h3 data-i18n="apt.3.name">T2 Terrasse</h3>
@@ -108,13 +109,13 @@
           <p data-i18n="dom.intro">Au-delà des appartements, Les Acacias, c'est un cadre partagé pensé pour le repos : jardin méditerranéen, piscine à débordement, espaces extérieurs et services pratiques pour un séjour sans souci.</p>
         </div>
         <div class="property-grid reveal">
-          <div class="property-tile" style="--cover: url('photos/property/jardin.jpg')">
+          <div class="property-tile" data-photo="jardin" style="--cover: url('photos/property/jardin.jpg')">
             <span data-i18n="dom.garden">Le jardin</span>
           </div>
-          <div class="property-tile" style="--cover: url('photos/property/cuisine-ete.jpg')">
+          <div class="property-tile" data-photo="cuisine-ete" style="--cover: url('photos/property/cuisine-ete.jpg')">
             <span data-i18n="dom.kitchen">Cuisine d'été</span>
           </div>
-          <div class="property-tile" style="--cover: url('photos/property/buanderie.jpg')">
+          <div class="property-tile" data-photo="buanderie" style="--cover: url('photos/property/buanderie.jpg')">
             <span data-i18n="dom.laundry">Buanderie</span>
           </div>
         </div>
@@ -129,6 +130,35 @@
           <li data-i18n="dom.f8">Barbecue / plancha</li>
           <li data-i18n="dom.f9">Linge de maison et serviettes fournis</li>
         </ul>
+      </div>
+    </section>
+
+    <!-- Événements & piscine -->
+    <section id="experiences" class="apartments experiences">
+      <div class="section-head reveal">
+        <p class="eyebrow" data-i18n="exp.eyebrow">Aussi aux Acacias</p>
+        <h2 data-i18n="exp.title">Événements &amp; piscine</h2>
+        <p data-i18n="exp.intro">Le domaine se privatise pour vos beaux moments, et la piscine s'ouvre à la journée.</p>
+      </div>
+      <div class="apt-cards exp-cards">
+        <a class="apt-card reveal" href="evenements.html">
+          <div class="apt-card-photo" data-photo="jardin" style="--cover: url('photos/property/jardin.jpg')"></div>
+          <div class="apt-card-body">
+            <h3 data-i18n="exp.evt.name">Vos événements</h3>
+            <p data-i18n="exp.evt.card">Anniversaire, fête de famille, shooting… le jardin et la piscine se privatisent à la journée.</p>
+            <p class="apt-price" data-flat-price="event"></p>
+            <span class="apt-card-link" data-i18n="exp.more">Découvrir →</span>
+          </div>
+        </a>
+        <a class="apt-card reveal" href="piscine.html">
+          <div class="apt-card-photo" data-photo="hero" style="--cover: url('photos/hero.jpg')"></div>
+          <div class="apt-card-body">
+            <h3 data-i18n="exp.pool.name">La piscine à la journée</h3>
+            <p data-i18n="exp.pool.card">Une journée au bord de la piscine à débordement, entre garrigue et soleil du Gard.</p>
+            <p class="apt-price" data-flat-price="pool"></p>
+            <span class="apt-card-link" data-i18n="exp.more">Découvrir →</span>
+          </div>
+        </a>
       </div>
     </section>
 
@@ -149,7 +179,7 @@
             <li>Le Grau-du-Roi <span data-i18n="loc.grau">40 min</span></li>
           </ul>
         </div>
-        <div class="loc-photo reveal" role="img" aria-label="Caveirac et ses environs"></div>
+        <div class="loc-photo reveal" data-photo="location" role="img" aria-label="Caveirac et ses environs"></div>
       </div>
       <div class="strip-wrap reveal">
         <p class="eyebrow">Caveirac</p>
@@ -203,9 +233,11 @@
               <textarea id="book-message" name="message" rows="3"></textarea>
             </div>
           </div>
+          <div class="booking-availability" id="booking-availability" aria-live="polite"></div>
           <div class="booking-estimate" id="booking-estimate" aria-live="polite"></div>
           <p class="booking-error" id="booking-error" hidden></p>
           <button type="submit" class="btn btn-primary booking-submit" data-i18n="book.submit">Envoyer ma demande</button>
+          <p class="est-note" data-i18n="res.policy">Demande sans engagement et sans paiement en ligne : nous vous confirmons la disponibilité et le tarif par e-mail, rapidement. Les disponibilités affichées sont synchronisées avec nos calendriers Airbnb et Booking.</p>
         </form>
 
         <p class="reserve-note" data-i18n="res.note">Vous pouvez aussi réserver via Airbnb, Booking ou Abritel.</p>
@@ -243,7 +275,8 @@
             <ul>
               <li data-i18n="rules.children">Enfants bienvenus · lit bébé sur demande</li>
               <li data-i18n="rules.minors">Moins de 18 ans accompagnés d'un adulte</li>
-              <li data-i18n="rules.deposit">Dépôt de garantie : jusqu'à 296 € en cas de dommages</li>
+              <li data-i18n="rules.deposit">Dépôt de garantie : jusqu'à 290 € en cas de dommages</li>
+              <li data-i18n="rules.payment">Règlement : virement instantané ou espèces</li>
             </ul>
           </div>
         </div>
@@ -286,6 +319,7 @@
     <p>© <span id="year"></span> Les Acacias · Caveirac</p>
   </footer>
 
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

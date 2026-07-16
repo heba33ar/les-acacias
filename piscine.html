@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>La piscine — Les Acacias · Caveirac</title>
+  <meta name="description" content="Une journée au bord de la piscine à débordement à l'eau salée des Acacias à Caveirac — 25 € par personne, sur réservation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html#top" class="brand">
+        <span class="brand-mark">Les Acacias</span>
+        <span class="brand-sub" data-i18n="brand.sub">Caveirac · Gard</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html#apartments" data-i18n="nav.apartments">Les appartements</a>
+        <a href="evenements.html" data-i18n="nav.events">Événements</a>
+        <a href="index.html#contact" data-i18n="nav.contact">Contact</a>
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" class="lang-btn active" data-lang="fr">FR</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="detail">
+      <a href="index.html" class="back-link" data-i18n="nav.back">← Retour à l’accueil</a>
+
+      <div class="detail-head">
+        <h1 data-i18n="pool.title">La piscine à la journée</h1>
+        <p class="apt-meta" data-i18n="pool.meta">Piscine à débordement · Eau salée · Chaises longues</p>
+        <p class="apt-price" data-flat-price="pool"></p>
+        <p data-i18n="pool.desc">
+          Offrez-vous une journée au bord de notre piscine à débordement à l'eau salée, chaises longues au soleil et jardin méditerranéen. Ouverte toute l'année, selon disponibilité.
+        </p>
+      </div>
+
+      <div class="pool-photo" data-photo="hero" role="img" aria-label="La piscine à débordement des Acacias"></div>
+
+      <h2 class="detail-sub" data-i18n="pool.cond">Bon à savoir</h2>
+      <ul class="facilities">
+        <li data-i18n="pool.i1">Créneaux : 9h – 13h ou 13h – 18h</li>
+        <li data-i18n="pool.i2">Jusqu'à 12 personnes par créneau</li>
+        <li data-i18n="pool.i3">Transats fournis — pensez à apporter vos serviettes</li>
+        <li data-i18n="pool.i4">Mineurs uniquement accompagnés d'un adulte</li>
+        <li data-i18n="pool.i5">Règlement sur place : virement instantané ou espèces</li>
+      </ul>
+    </section>
+
+    <section class="reserve">
+      <div class="reserve-inner">
+        <p class="eyebrow" data-i18n="exp.eyebrow">Aussi aux Acacias</p>
+        <h2 data-i18n="pool.form.title">Réserver ma journée</h2>
+        <p data-i18n="pool.form.text">Indiquez la date et le nombre de personnes — nous confirmons la disponibilité rapidement. Vous pouvez aussi appeler le 06 62 51 77 65.</p>
+
+        <form class="booking" id="pool-form" novalidate>
+          <div class="booking-grid">
+            <div class="field">
+              <label class="field-label" for="pool-date" data-i18n="pool.date">Date souhaitée</label>
+              <input type="date" id="pool-date" name="date" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="pool-slot" data-i18n="pool.slot">Créneau</label>
+              <select id="pool-slot" name="slot">
+                <option value="am" data-i18n="pool.slot.am">Matin · 9h – 13h</option>
+                <option value="pm" data-i18n="pool.slot.pm">Après-midi · 13h – 18h</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="pool-guests" data-i18n="pool.guests">Nombre de personnes</label>
+              <input type="number" id="pool-guests" name="guests" min="1" max="12" value="2" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="pool-name" data-i18n="book.name">Votre nom</label>
+              <input type="text" id="pool-name" name="name" autocomplete="name" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="pool-email" data-i18n="book.email">E-mail</label>
+              <input type="email" id="pool-email" name="email" autocomplete="email" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="pool-phone" data-i18n="book.phone">Téléphone</label>
+              <input type="tel" id="pool-phone" name="phone" autocomplete="tel" />
+            </div>
+          </div>
+          <div class="booking-estimate">
+            <div class="est-line est-total">
+              <span data-i18n="pool.total">Total estimé</span>
+              <span id="pool-total-value"></span>
+            </div>
+          </div>
+          <p class="booking-error" id="pool-error" hidden></p>
+          <button type="submit" class="btn btn-primary booking-submit" data-i18n="pool.submit">Envoyer ma demande</button>
+          <p class="est-note" data-i18n="pool.note">Accès selon disponibilité — nous confirmons par e-mail ou par téléphone. Règlement sur place, sans paiement en ligne.</p>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Les Acacias · Caveirac</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

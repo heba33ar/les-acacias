@@ -9,21 +9,29 @@ const BOOKING_CONFIG = {
   contactEmail: 'lesacacias30@gmail.com',
 
   // Taxe de séjour : par personne et par nuit
-  touristTaxPerPersonPerNight: 1,
+  touristTaxPerPersonPerNight: 3.3,
 
   // Dépôt de garantie (montant indicatif, simplement affiché —
-  // retenu seulement en cas de dommages, comme sur Booking)
-  securityDeposit: 296,
+  // retenu seulement en cas de dommages)
+  securityDeposit: 290,
 
   // Prix de base pour 2 personnes ; supplément par personne au-delà
   baseGuests: 2,
-  extraGuestPerNight: 40,
+  extraGuestPerNight: 30,
+
+  // Réductions long séjour, en % sur l'hébergement
+  weekDiscountPct: 10,   // dès 7 nuits
+  monthDiscountPct: 15,  // dès 28 nuits
+
+  // Événements et piscine (règlement sur place)
+  eventPrice: 300,          // journée ou soirée événement
+  poolPricePerPerson: 25,   // piscine, par personne et par créneau
 
   // Un appartement par numéro (correspond à data-apt dans index.html)
   apartments: {
-    1: { name: 'T3 Confort',  name_en: 'T3 Confort',  maxGuests: 6, nightlyRate: 200, cleaningFee: 50, minNights: 1 },
-    2: { name: 'T3 Terrasse', name_en: 'T3 Terrasse', maxGuests: 6, nightlyRate: 180, cleaningFee: 50, minNights: 1 },
-    3: { name: 'T2 Terrasse', name_en: 'T2 Terrasse', maxGuests: 4, nightlyRate: 160, cleaningFee: 50, minNights: 1 },
+    1: { name: 'T3 Confort',  name_en: 'T3 Confort',  maxGuests: 6, nightlyRate: 150, cleaningFee: 40, minNights: 1 },
+    2: { name: 'T3 Terrasse', name_en: 'T3 Terrasse', maxGuests: 6, nightlyRate: 130, cleaningFee: 40, minNights: 1 },
+    3: { name: 'T2 Terrasse', name_en: 'T2 Terrasse', maxGuests: 4, nightlyRate: 110, cleaningFee: 40, minNights: 1 },
   },
 };
 
@@ -32,10 +40,14 @@ const PRICE_T = {
   fr: {
     short: (r) => `Dès ${r} € / nuit`,
     long: (r, b, x) => `Dès ${r} € par nuit pour ${b} personnes · +${x} € par nuit et par personne supplémentaire`,
+    event: (p) => `${p} € la journée`,
+    pool: (p) => `${p} € par personne · la journée`,
   },
   en: {
     short: (r) => `From €${r} / night`,
     long: (r, b, x) => `From €${r} per night for ${b} guests · +€${x} per night per extra guest`,
+    event: (p) => `€${p} for the day`,
+    pool: (p) => `€${p} per person · per day`,
   },
 };
 function fillPrices(lang) {
@@ -47,6 +59,113 @@ function fillPrices(lang) {
       ? t.long(apt.nightlyRate, BOOKING_CONFIG.baseGuests, BOOKING_CONFIG.extraGuestPerNight)
       : t.short(apt.nightlyRate);
   });
+  document.querySelectorAll('[data-flat-price]').forEach((el) => {
+    el.textContent = el.dataset.flatPrice === 'event'
+      ? t.event(BOOKING_CONFIG.eventPrice)
+      : t.pool(BOOKING_CONFIG.poolPricePerPerson);
+  });
+}
+
+/* ============================================================
+   CONTENU MODIFIABLE DEPUIS L'ESPACE ADMIN (admin.html)
+   ------------------------------------------------------------
+   Si config.js contient les accès Supabase, le site charge les
+   textes, photos et tarifs personnalisés (lecture seule).
+   Sinon — ou hors ligne — il garde ceux écrits dans ce fichier.
+   ============================================================ */
+const SITE_DB = window.ACACIAS_SUPABASE || {};
+if (SITE_DB.url && SITE_DB.anonKey) {
+  fetch(`${SITE_DB.url}/rest/v1/site_content?select=key,value`, {
+    headers: { apikey: SITE_DB.anonKey, Authorization: `Bearer ${SITE_DB.anonKey}` },
+  })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((rows) => {
+      if (!rows || !rows.length) return;
+      applySiteContent(Object.fromEntries(rows.map((r) => [r.key, r.value])));
+    })
+    .catch(() => {});
+}
+
+function applySiteContent(content) {
+  // Textes (FR/EN) — remplacent ceux du dictionnaire ci-dessous
+  if (content.texts) {
+    Object.entries(content.texts).forEach(([key, v]) => {
+      if (!v || typeof v !== 'object') return;
+      if (v.fr) translations.fr[key] = v.fr;
+      if (v.en) translations.en[key] = v.en;
+    });
+  }
+
+  // Tarifs
+  if (content.prices) {
+    const p = content.prices;
+    ['extraGuestPerNight', 'touristTaxPerPersonPerNight', 'eventPrice', 'poolPricePerPerson',
+     'securityDeposit', 'weekDiscountPct', 'monthDiscountPct'].forEach((k) => {
+      if (typeof p[k] === 'number') BOOKING_CONFIG[k] = p[k];
+    });
+    if (p.apartments) {
+      Object.entries(p.apartments).forEach(([id, a]) => {
+        const apt = BOOKING_CONFIG.apartments[id];
+        if (!apt || !a) return;
+        if (typeof a.nightlyRate === 'number') apt.nightlyRate = a.nightlyRate;
+        if (typeof a.cleaningFee === 'number') apt.cleaningFee = a.cleaningFee;
+      });
+    }
+  }
+
+  // Photos : éléments marqués data-photo + galeries des appartements
+  if (content.photos) {
+    const ph = content.photos;
+    document.querySelectorAll('[data-photo]').forEach((el) => {
+      const key = el.dataset.photo;
+      let url = null;
+      if (key.startsWith('cover-')) {
+        const list = ph.galleries && ph.galleries['apartment-' + key.slice(6)];
+        url = (Array.isArray(list) && list[0]) || null;
+      } else {
+        url = ph[key] || null;
+      }
+      if (!url) return;
+      if (el.classList.contains('apt-card-photo') || el.classList.contains('property-tile')) {
+        el.style.setProperty('--cover', `url('${url}')`);
+      } else {
+        el.style.backgroundImage = `url('${url}')`;
+      }
+    });
+    if (ph.galleries) {
+      document.querySelectorAll('.apt-gallery').forEach((c) => {
+        const list = ph.galleries[c.dataset.folder];
+        if (Array.isArray(list) && list.length) buildGalleryFromUrls(c, list);
+      });
+    }
+  }
+
+  // Ré-applique la langue courante (textes + prix affichés)
+  setLanguage(document.documentElement.lang === 'en' ? 'en' : 'fr');
+  document.dispatchEvent(new CustomEvent('acacias:content'));
+}
+
+// Reconstruit une galerie à partir d'une liste d'adresses de photos
+// (photos envoyées depuis l'espace admin).
+function buildGalleryFromUrls(container, urls) {
+  container.innerHTML = '';
+  urls.forEach((url, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.dataset.url = url;
+    btn.setAttribute('aria-label', `Photo ${i + 1}`);
+    const img = document.createElement('img');
+    img.alt = `Les Acacias — photo ${i + 1}`;
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    img.src = url;
+    btn.appendChild(img);
+    btn.addEventListener('click', () => {
+      const set = [...container.querySelectorAll('button')].map((b) => b.dataset.url);
+      openLightbox(set, set.indexOf(url));
+    });
+    container.appendChild(btn);
+  });
 }
 
 const translations = {
@@ -56,6 +175,8 @@ const translations = {
     'nav.domaine': 'Le domaine',
     'nav.location': 'Le lieu',
     'nav.contact': 'Contact',
+    'nav.events': 'Événements',
+    'nav.pool': 'Piscine',
     'nav.back': '← Retour à l’accueil',
     'hero.eyebrow': 'Petite résidence · Aux portes de Nîmes',
     'hero.title': 'Trois appartements de charme, piscine à débordement et jardin baigné de soleil.',
@@ -125,6 +246,7 @@ const translations = {
     'res.title': 'Réserver votre séjour',
     'res.text': "Choisissez votre appartement et vos dates pour obtenir une estimation immédiate, puis envoyez-nous votre demande. Nous confirmons la disponibilité et vous répondons rapidement.",
     'res.note': 'Vous pouvez aussi réserver via Airbnb, Booking ou Abritel.',
+    'res.policy': "Demande sans engagement et sans paiement en ligne : nous confirmons la disponibilité et le tarif par e-mail. Pour bloquer vos dates, un acompte de 50 % est demandé par virement ; le solde se règle sur place, par virement instantané ou en espèces. Les disponibilités affichées sont synchronisées avec nos calendriers Airbnb et Booking.",
     'book.apt': 'Appartement',
     'book.checkin': 'Arrivée',
     'book.checkout': 'Départ',
@@ -134,6 +256,60 @@ const translations = {
     'book.phone': 'Téléphone',
     'book.message': 'Message (optionnel)',
     'book.submit': 'Envoyer ma demande',
+    'exp.eyebrow': 'Aussi aux Acacias',
+    'exp.title': 'Événements & piscine',
+    'exp.intro': "Le domaine se privatise pour vos beaux moments, et la piscine s'ouvre à la journée.",
+    'exp.evt.name': 'Vos événements',
+    'exp.evt.card': "Anniversaire, fête de famille, shooting… le jardin et la piscine se privatisent à la journée.",
+    'exp.pool.name': 'La piscine à la journée',
+    'exp.pool.card': "Une journée au bord de la piscine à débordement, entre garrigue et soleil du Gard.",
+    'exp.more': 'Découvrir →',
+    'evt.title': 'Vos événements aux Acacias',
+    'evt.meta': 'Jardin · Piscine · Cuisine d’été',
+    'evt.desc': "Anniversaire, fête de famille, baptême, shooting photo… Le temps d'une journée ou d'une soirée, le jardin méditerranéen, la piscine à débordement et la cuisine d'été se privatisent pour vous. Dites-nous ce que vous imaginez : nous vous confirmons la disponibilité et les détails par e-mail.",
+    'evt.cond': 'Conditions & inclus',
+    'evt.i1': "Piscine, jardin, cuisine d'été et barbecue inclus (charbon non fourni)",
+    'evt.i2': 'Ménage inclus',
+    'evt.i3': 'Journée 9h – 18h ou soirée 19h – minuit (horaires adaptables sur demande)',
+    'evt.i4': "Jusqu'à 12 personnes",
+    'evt.i5': 'Caution de 200 €',
+    'evt.i6': 'Uniquement lorsque la résidence est libre de voyageurs',
+    'evt.i7': "Mineurs uniquement accompagnés d'un adulte",
+    'evt.form.title': 'Demander une date',
+    'evt.form.text': "Indiquez la date souhaitée et quelques mots sur votre événement — réponse rapide, sans engagement.",
+    'evt.date': 'Date souhaitée',
+    'evt.slot': 'Créneau',
+    'evt.slot.day': 'Journée · 9h – 18h',
+    'evt.slot.evening': 'Soirée · 19h – minuit',
+    'evt.slot.other': 'Autre (à préciser en message)',
+    'evt.type': "Type d'événement",
+    'evt.type.ph': 'Anniversaire, fête de famille…',
+    'evt.guests': 'Nombre de personnes',
+    'evt.note': 'Nous confirmons la disponibilité par e-mail. Règlement sur place : virement instantané ou espèces.',
+    'evt.submit': 'Envoyer ma demande',
+    'pool.title': 'La piscine à la journée',
+    'pool.meta': 'Piscine à débordement · Eau salée · Chaises longues',
+    'pool.desc': "Offrez-vous une demi-journée au bord de notre piscine à débordement à l'eau salée, transats au soleil et jardin méditerranéen. Créneaux de 9h à 13h ou de 13h à 18h, selon disponibilité.",
+    'pool.cond': 'Bon à savoir',
+    'pool.i1': 'Créneaux : 9h – 13h ou 13h – 18h',
+    'pool.i2': "Jusqu'à 12 personnes par créneau",
+    'pool.i3': 'Transats fournis — pensez à apporter vos serviettes',
+    'pool.i4': "Mineurs uniquement accompagnés d'un adulte",
+    'pool.i5': 'Règlement sur place : virement instantané ou espèces',
+    'pool.form.title': 'Réserver mon créneau',
+    'pool.form.text': "Indiquez la date, le créneau et le nombre de personnes — nous confirmons la disponibilité rapidement. Vous pouvez aussi appeler le 06 62 51 77 65.",
+    'pool.date': 'Date souhaitée',
+    'pool.slot': 'Créneau',
+    'pool.slot.am': 'Matin · 9h – 13h',
+    'pool.slot.pm': 'Après-midi · 13h – 18h',
+    'pool.guests': 'Nombre de personnes',
+    'pool.total': 'Total estimé',
+    'pool.note': "Accès selon disponibilité — nous confirmons par e-mail ou par téléphone. Règlement sur place : virement instantané ou espèces.",
+    'pool.submit': 'Envoyer ma demande',
+    'cal.title': 'Disponibilités',
+    'cal.free': 'Disponible',
+    'cal.busy': 'Occupé',
+    'cal.note': 'Calendrier synchronisé avec Airbnb et Booking, mis à jour toutes les heures.',
     'rules.eyebrow': 'Bon à savoir',
     'rules.title': 'Informations pratiques',
     'rules.arrival': 'Arrivée & départ',
@@ -149,7 +325,8 @@ const translations = {
     'rules.family': 'Familles & caution',
     'rules.children': 'Enfants bienvenus · lit bébé sur demande',
     'rules.minors': "Moins de 18 ans accompagnés d'un adulte",
-    'rules.deposit': "Dépôt de garantie : jusqu'à 296 € en cas de dommages",
+    'rules.deposit': "Dépôt de garantie : jusqu'à 290 € en cas de dommages",
+    'rules.payment': 'Règlement : virement instantané ou espèces',
     'contact.eyebrow': 'À votre écoute',
     'contact.title': 'Nous contacter',
     'contact.phone': 'Téléphone',
@@ -162,6 +339,8 @@ const translations = {
     'nav.domaine': 'The property',
     'nav.location': 'The place',
     'nav.contact': 'Contact',
+    'nav.events': 'Events',
+    'nav.pool': 'The pool',
     'nav.back': '← Back to home',
     'hero.eyebrow': 'A small residence · Minutes from Nîmes',
     'hero.title': 'Three character apartments, an infinity pool and a garden full of sunshine.',
@@ -231,6 +410,7 @@ const translations = {
     'res.title': 'Book your stay',
     'res.text': "Choose your apartment and dates for an instant estimate, then send us your request. We'll confirm availability and reply quickly.",
     'res.note': 'You can also book via Airbnb, Booking or Abritel.',
+    'res.policy': "No-commitment request, no online payment: we confirm availability and the exact rate by email. To secure your dates, a 50% deposit is requested by bank transfer; the balance is paid on site, by instant transfer or cash. The availability shown is synced with our Airbnb and Booking calendars.",
     'book.apt': 'Apartment',
     'book.checkin': 'Check-in',
     'book.checkout': 'Check-out',
@@ -240,6 +420,60 @@ const translations = {
     'book.phone': 'Phone',
     'book.message': 'Message (optional)',
     'book.submit': 'Send my request',
+    'exp.eyebrow': 'Also at Les Acacias',
+    'exp.title': 'Events & the pool',
+    'exp.intro': 'The property can be privatised for your special moments, and the pool opens for the day.',
+    'exp.evt.name': 'Your events',
+    'exp.evt.card': 'Birthday, family celebration, photo shoot… the garden and pool are yours for the day.',
+    'exp.pool.name': 'The pool, for a day',
+    'exp.pool.card': 'A day by the infinity pool, between the garrigue and the southern sun.',
+    'exp.more': 'Find out more →',
+    'evt.title': 'Your events at Les Acacias',
+    'evt.meta': 'Garden · Pool · Outdoor kitchen',
+    'evt.desc': "Birthday, family celebration, christening, photo shoot… For a day or an evening, the Mediterranean garden, the infinity pool and the outdoor kitchen become yours. Tell us what you have in mind: we confirm availability and details by email.",
+    'evt.cond': 'Conditions & included',
+    'evt.i1': 'Pool, garden, outdoor kitchen and barbecue included (charcoal not provided)',
+    'evt.i2': 'Cleaning included',
+    'evt.i3': 'Day 9 am – 6 pm or evening 7 pm – midnight (times can be adjusted on request)',
+    'evt.i4': 'Up to 12 people',
+    'evt.i5': '€200 security deposit',
+    'evt.i6': 'Only when the residence is free of staying guests',
+    'evt.i7': 'Minors only when accompanied by an adult',
+    'evt.form.title': 'Request a date',
+    'evt.form.text': 'Tell us your preferred date and a few words about your event — quick reply, no commitment.',
+    'evt.date': 'Preferred date',
+    'evt.slot': 'Time slot',
+    'evt.slot.day': 'Day · 9 am – 6 pm',
+    'evt.slot.evening': 'Evening · 7 pm – midnight',
+    'evt.slot.other': 'Other (please specify in the message)',
+    'evt.type': 'Type of event',
+    'evt.type.ph': 'Birthday, family celebration…',
+    'evt.guests': 'Number of people',
+    'evt.note': 'We confirm availability by email. Payment on site: instant bank transfer or cash.',
+    'evt.submit': 'Send my request',
+    'pool.title': 'The pool, for a day',
+    'pool.meta': 'Infinity pool · Salt water · Sun loungers',
+    'pool.desc': 'Treat yourself to a half-day by our infinity saltwater pool, sun loungers and Mediterranean garden. Slots from 9 am to 1 pm or 1 pm to 6 pm, subject to availability.',
+    'pool.cond': 'Good to know',
+    'pool.i1': 'Slots: 9 am – 1 pm or 1 pm – 6 pm',
+    'pool.i2': 'Up to 12 people per slot',
+    'pool.i3': 'Sun loungers provided — please bring your own towels',
+    'pool.i4': 'Minors only when accompanied by an adult',
+    'pool.i5': 'Payment on site: instant bank transfer or cash',
+    'pool.form.title': 'Book my slot',
+    'pool.form.text': 'Tell us the date, the slot and how many people — we confirm availability quickly. You can also call +33 6 62 51 77 65.',
+    'pool.date': 'Preferred date',
+    'pool.slot': 'Time slot',
+    'pool.slot.am': 'Morning · 9 am – 1 pm',
+    'pool.slot.pm': 'Afternoon · 1 pm – 6 pm',
+    'pool.guests': 'Number of people',
+    'pool.total': 'Estimated total',
+    'pool.note': 'Access subject to availability — we confirm by email or phone. Payment on site: instant bank transfer or cash.',
+    'pool.submit': 'Send my request',
+    'cal.title': 'Availability',
+    'cal.free': 'Available',
+    'cal.busy': 'Booked',
+    'cal.note': 'Calendar synced with Airbnb and Booking, refreshed every hour.',
     'rules.eyebrow': 'Good to know',
     'rules.title': 'Practical information',
     'rules.arrival': 'Check-in & check-out',
@@ -255,7 +489,8 @@ const translations = {
     'rules.family': 'Families & deposit',
     'rules.children': 'Children welcome · cot on request',
     'rules.minors': 'Guests under 18 must be accompanied by an adult',
-    'rules.deposit': 'Damage deposit: up to €296 in case of damage',
+    'rules.deposit': 'Damage deposit: up to €290 in case of damage',
+    'rules.payment': 'Payment: instant bank transfer or cash',
     'contact.eyebrow': 'At your service',
     'contact.title': 'Get in touch',
     'contact.phone': 'Phone',
@@ -378,6 +613,8 @@ if (bookingForm) {
       nights: (n) => `${n} nuit${n > 1 ? 's' : ''}`,
       lineNights: 'Hébergement', cleaning: 'Frais de ménage', tax: 'Taxe de séjour',
       extras: 'Personnes supplémentaires',
+      discount: (p) => `Réduction long séjour (−${p} %)`,
+      discountNote: (w, m) => `Réduction de ${w} % dès 7 nuits, ${m} % dès 28 nuits (sur l'hébergement).`,
       baseNote: (b, x) => `Tarif pour ${b} personnes — personne supplémentaire : ${x} € par nuit.`,
       total: 'Total estimé', deposit: (d) => `Dépôt de garantie : jusqu'à ${d} € en cas de dommages (rien à payer d'avance).`,
       tbd: 'Tarif communiqué sur demande — envoyez votre demande pour recevoir un devis.',
@@ -388,6 +625,9 @@ if (bookingForm) {
       errGuests: (m) => `Cet appartement accueille au maximum ${m} voyageurs.`,
       errRequired: 'Merci de renseigner votre nom et votre e-mail.',
       subject: (a) => `Demande de réservation — ${a}`,
+      checking: 'Vérification des disponibilités…',
+      available: 'Ces dates sont disponibles ✓',
+      unavailable: 'Ces dates ne sont pas disponibles pour cet appartement.',
     },
     en: {
       aptLabel: (a) => `${a.name_en} — up to ${a.maxGuests}`,
@@ -395,6 +635,8 @@ if (bookingForm) {
       nights: (n) => `${n} night${n > 1 ? 's' : ''}`,
       lineNights: 'Accommodation', cleaning: 'Cleaning fee', tax: 'Tourist tax',
       extras: 'Extra guests',
+      discount: (p) => `Long-stay discount (−${p}%)`,
+      discountNote: (w, m) => `${w}% off from 7 nights, ${m}% off from 28 nights (on accommodation).`,
       baseNote: (b, x) => `Rate for ${b} guests — each extra guest: €${x} per night.`,
       total: 'Estimated total', deposit: (d) => `Damage deposit: up to €${d} in case of damage (nothing to pay upfront).`,
       tbd: 'Rate provided on request — send your request to receive a quote.',
@@ -405,6 +647,9 @@ if (bookingForm) {
       errGuests: (m) => `This apartment sleeps up to ${m} guests.`,
       errRequired: 'Please enter your name and email.',
       subject: (a) => `Booking request — ${a}`,
+      checking: 'Checking availability…',
+      available: 'These dates are available ✓',
+      unavailable: 'These dates are not available for this apartment.',
     },
   };
   const lang = () => (document.documentElement.lang === 'en' ? 'en' : 'fr');
@@ -435,9 +680,14 @@ if (bookingForm) {
     const extraGuests = Math.max(0, g - BOOKING_CONFIG.baseGuests);
     const lodging = apt.nightlyRate * n;
     const extras = extraGuests * BOOKING_CONFIG.extraGuestPerNight * n;
+    // Réduction long séjour sur l'hébergement (pas sur le ménage ni la taxe)
+    let discountPct = 0;
+    if (n >= 28) discountPct = BOOKING_CONFIG.monthDiscountPct;
+    else if (n >= 7) discountPct = BOOKING_CONFIG.weekDiscountPct;
+    const discount = Math.round((lodging + extras) * discountPct) / 100;
     const cleaning = apt.cleaningFee;
-    const tax = BOOKING_CONFIG.touristTaxPerPersonPerNight * g * n;
-    return { apt, n, g, extraGuests, lodging, extras, cleaning, tax, total: lodging + extras + cleaning + tax };
+    const tax = Math.round(BOOKING_CONFIG.touristTaxPerPersonPerNight * g * n * 100) / 100;
+    return { apt, n, g, extraGuests, lodging, extras, discountPct, discount, cleaning, tax, total: lodging + extras - discount + cleaning + tax };
   }
 
   function renderEstimate() {
@@ -453,11 +703,13 @@ if (bookingForm) {
       [`${t.lineNights} (${t.nights(e.n)})`, eur(e.lodging)],
     ];
     if (e.extras > 0) rows.push([`${t.extras} (${e.extraGuests} × ${t.nights(e.n)})`, eur(e.extras)]);
+    if (e.discount > 0) rows.push([t.discount(e.discountPct), `−${eur(e.discount)}`]);
     if (e.cleaning > 0) rows.push([t.cleaning, eur(e.cleaning)]);
     if (e.tax > 0) rows.push([`${t.tax} (${e.g} × ${e.n})`, eur(e.tax)]);
     let html = rows.map(([k, v]) => `<div class="est-line"><span>${k}</span><span>${v}</span></div>`).join('');
     html += `<div class="est-line est-total"><span>${t.total}</span><span>${eur(e.total)}</span></div>`;
     html += `<p class="est-note">${t.baseNote(BOOKING_CONFIG.baseGuests, BOOKING_CONFIG.extraGuestPerNight)}</p>`;
+    html += `<p class="est-note">${t.discountNote(BOOKING_CONFIG.weekDiscountPct, BOOKING_CONFIG.monthDiscountPct)}</p>`;
     if (BOOKING_CONFIG.securityDeposit > 0) html += `<p class="est-note">${t.deposit(BOOKING_CONFIG.securityDeposit)}</p>`;
     estBox.innerHTML = html;
   }
@@ -509,14 +761,46 @@ if (bookingForm) {
   aptSel.addEventListener('change', () => { syncApartmentUI(); renderEstimate(); });
   [checkin, checkout, guests].forEach((el) => el.addEventListener('input', renderEstimate));
 
+  // Vérification des disponibilités en direct (quand le site est en ligne)
+  const avBox = $('booking-availability');
+  let avTimer = null;
+  async function checkAvailability() {
+    if (!avBox) return;
+    const t = BOOK_T[lang()];
+    const n = nightsBetween(checkin.value, checkout.value);
+    if (!checkin.value || !checkout.value || !n || n <= 0) {
+      avBox.textContent = ''; avBox.className = 'booking-availability'; return;
+    }
+    avBox.textContent = t.checking;
+    avBox.className = 'booking-availability';
+    try {
+      const r = await fetch(`/api/availability?apartment=${aptSel.value}&checkin=${checkin.value}&checkout=${checkout.value}`);
+      if (!r.ok) throw new Error();
+      const d = await r.json();
+      if (d.configured === false) { avBox.textContent = ''; avBox.className = 'booking-availability'; return; }
+      avBox.textContent = d.available ? t.available : t.unavailable;
+      avBox.className = 'booking-availability ' + (d.available ? 'ok' : 'ko');
+    } catch (_) {
+      // Pas de serveur (site ouvert en local) : on n'affiche rien.
+      avBox.textContent = ''; avBox.className = 'booking-availability';
+    }
+  }
+  [aptSel, checkin, checkout].forEach((el) => el.addEventListener('change', () => {
+    clearTimeout(avTimer);
+    avTimer = setTimeout(checkAvailability, 300);
+  }));
+
+  // Contenu/tarifs mis à jour depuis l'admin → on rafraîchit le formulaire
+  document.addEventListener('acacias:content', () => { syncApartmentUI(); renderEstimate(); });
+
+  // Envoi de la demande par e-mail pré-rempli (aucun paiement en ligne)
   bookingForm.addEventListener('submit', (ev) => {
     ev.preventDefault();
     clearError();
     const err = validate();
     if (err) { showError(err); return; }
     const { subject, body } = buildEmail();
-    const href = `mailto:${BOOKING_CONFIG.contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = href;
+    window.location.href = `mailto:${BOOKING_CONFIG.contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   });
 
   // Re-traduit le formulaire (libellés + estimation) au changement de langue.
@@ -532,6 +816,169 @@ if (bookingForm) {
 
   syncApartmentUI();
 }
+
+/* ============================================================
+   CALENDRIER DE DISPONIBILITÉS (pages appartement)
+   ------------------------------------------------------------
+   Lit les périodes occupées via /api/availability (calendriers
+   Airbnb / Booking). Si le serveur n'est pas là (site en local)
+   ou pas encore configuré, la section se masque simplement.
+   ============================================================ */
+(function () {
+  const MONTHS_AHEAD = 8; // combien de mois on charge et on peut feuilleter
+  const isoDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  document.querySelectorAll('.availability-cal').forEach((el) => {
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const from = isoDate(today);
+    const to = isoDate(new Date(today.getFullYear(), today.getMonth() + MONTHS_AHEAD, 1));
+    const hide = () => { const s = el.closest('.cal-section'); if (s) s.hidden = true; };
+
+    fetch(`/api/availability?apartment=${el.dataset.apt}&from=${from}&to=${to}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!d || d.configured === false || !Array.isArray(d.busy)) { hide(); return; }
+        initCalendar(el, d.busy, today);
+      })
+      .catch(hide);
+  });
+
+  function initCalendar(el, busy, today) {
+    const todayStr = isoDate(today);
+    const isBusy = (dateStr) => busy.some((r) => r.start <= dateStr && dateStr < r.end);
+    let offset = 0; // premier mois affiché (0 = mois en cours)
+
+    function monthHTML(year, month) {
+      const locale = document.documentElement.lang === 'en' ? 'en-GB' : 'fr-FR';
+      const first = new Date(year, month, 1);
+      const label = first.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+      const dayNames = document.documentElement.lang === 'en'
+        ? ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+        : ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const startCol = (first.getDay() + 6) % 7; // semaine qui commence le lundi
+
+      let cells = dayNames.map((d) => `<span class="cal-dayname">${d}</span>`).join('');
+      for (let i = 0; i < startCol; i++) cells += '<span></span>';
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = isoDate(new Date(year, month, day));
+        let cls = 'cal-day';
+        if (dateStr < todayStr) cls += ' past';
+        else if (isBusy(dateStr)) cls += ' busy';
+        cells += `<span class="${cls}">${day}</span>`;
+      }
+      return `<div class="cal-month"><div class="cal-month-label">${label}</div><div class="cal-grid">${cells}</div></div>`;
+    }
+
+    function render() {
+      const base = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+      const next = new Date(today.getFullYear(), today.getMonth() + offset + 1, 1);
+      el.innerHTML =
+        `<div class="cal-nav">
+           <button type="button" class="cal-prev" aria-label="Mois précédent" ${offset === 0 ? 'disabled' : ''}>‹</button>
+           <button type="button" class="cal-next" aria-label="Mois suivant" ${offset >= MONTHS_AHEAD - 2 ? 'disabled' : ''}>›</button>
+         </div>
+         <div class="cal-months">${monthHTML(base.getFullYear(), base.getMonth())}${monthHTML(next.getFullYear(), next.getMonth())}</div>`;
+      el.querySelector('.cal-prev').addEventListener('click', () => { offset = Math.max(0, offset - 1); render(); });
+      el.querySelector('.cal-next').addEventListener('click', () => { offset = Math.min(MONTHS_AHEAD - 2, offset + 1); render(); });
+    }
+
+    render();
+    // Re-rendu dans la bonne langue quand on change FR/EN
+    document.querySelectorAll('.lang-btn').forEach((btn) => btn.addEventListener('click', () => setTimeout(render, 0)));
+  }
+})();
+
+/* ============================================================
+   FORMULAIRES ÉVÉNEMENTS & PISCINE — demande par e-mail,
+   règlement sur place (aucun paiement en ligne).
+   ============================================================ */
+(function () {
+  const isEn = () => document.documentElement.lang === 'en';
+  const val = (id) => (document.getElementById(id) ? document.getElementById(id).value.trim() : '');
+  const REQ_T = {
+    fr: { required: 'Merci de renseigner la date, votre nom et votre e-mail.' },
+    en: { required: 'Please fill in the date, your name and your email.' },
+  };
+
+  function sendRequest(subject, lines) {
+    const body = lines.filter(Boolean).join('\n');
+    window.location.href = `mailto:${BOOKING_CONFIG.contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  function showFormError(id, show) {
+    const box = document.getElementById(id);
+    if (!box) return;
+    box.hidden = !show;
+    if (show) box.textContent = REQ_T[isEn() ? 'en' : 'fr'].required;
+  }
+
+  const eventForm = document.getElementById('event-form');
+  if (eventForm) {
+    eventForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const ok = val('evt-date') && val('evt-name') && val('evt-email');
+      showFormError('evt-error', !ok);
+      if (!ok) return;
+      const slotSel = document.getElementById('evt-slot');
+      const slotTxt = slotSel ? slotSel.selectedOptions[0].textContent : '';
+      const L = isEn()
+        ? { s: `Event request — ${val('evt-date')}`, date: 'Date', slot: 'Time slot', type: 'Type of event', guests: 'People', name: 'Name', email: 'Email', phone: 'Phone', msg: 'Message', price: 'Indicative price' }
+        : { s: `Demande événement — ${val('evt-date')}`, date: 'Date', slot: 'Créneau', type: "Type d'événement", guests: 'Personnes', name: 'Nom', email: 'E-mail', phone: 'Téléphone', msg: 'Message', price: 'Tarif indicatif' };
+      sendRequest(L.s, [
+        `${L.date}: ${val('evt-date')}`,
+        slotTxt && `${L.slot}: ${slotTxt}`,
+        val('evt-type') && `${L.type}: ${val('evt-type')}`,
+        val('evt-guests') && `${L.guests}: ${val('evt-guests')}`,
+        '',
+        `${L.name}: ${val('evt-name')}`,
+        `${L.email}: ${val('evt-email')}`,
+        `${L.phone}: ${val('evt-phone') || '—'}`,
+        val('evt-message') && `\n${L.msg}: ${val('evt-message')}`,
+        '',
+        `${L.price}: ${BOOKING_CONFIG.eventPrice} €`,
+      ]);
+    });
+  }
+
+  const poolForm = document.getElementById('pool-form');
+  if (poolForm) {
+    const totalBox = document.getElementById('pool-total-value');
+    function renderPoolTotal() {
+      if (!totalBox) return;
+      const n = Math.max(1, parseInt(val('pool-guests'), 10) || 1);
+      totalBox.textContent = `${(n * BOOKING_CONFIG.poolPricePerPerson).toLocaleString(isEn() ? 'en-GB' : 'fr-FR')} €`;
+    }
+    const guestsInput = document.getElementById('pool-guests');
+    if (guestsInput) guestsInput.addEventListener('input', renderPoolTotal);
+    document.querySelectorAll('.lang-btn').forEach((btn) => btn.addEventListener('click', () => setTimeout(renderPoolTotal, 0)));
+    renderPoolTotal();
+
+    poolForm.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      const ok = val('pool-date') && val('pool-name') && val('pool-email');
+      showFormError('pool-error', !ok);
+      if (!ok) return;
+      const n = Math.max(1, parseInt(val('pool-guests'), 10) || 1);
+      const poolSlotSel = document.getElementById('pool-slot');
+      const poolSlotTxt = poolSlotSel ? poolSlotSel.selectedOptions[0].textContent : '';
+      const L = isEn()
+        ? { s: `Pool request — ${val('pool-date')}`, date: 'Date', slot: 'Time slot', guests: 'People', name: 'Name', email: 'Email', phone: 'Phone', total: 'Indicative total' }
+        : { s: `Demande piscine — ${val('pool-date')}`, date: 'Date', slot: 'Créneau', guests: 'Personnes', name: 'Nom', email: 'E-mail', phone: 'Téléphone', total: 'Total indicatif' };
+      sendRequest(L.s, [
+        `${L.date}: ${val('pool-date')}`,
+        poolSlotTxt && `${L.slot}: ${poolSlotTxt}`,
+        `${L.guests}: ${n}`,
+        '',
+        `${L.name}: ${val('pool-name')}`,
+        `${L.email}: ${val('pool-email')}`,
+        `${L.phone}: ${val('pool-phone') || '—'}`,
+        '',
+        `${L.total}: ${n * BOOKING_CONFIG.poolPricePerPerson} € (${n} × ${BOOKING_CONFIG.poolPricePerPerson} €)`,
+      ]);
+    });
+  }
+})();
 
 /* ============================================================
    Apparitions douces au défilement (.reveal → .in-view)

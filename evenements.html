@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Événements — Les Acacias · Caveirac</title>
+  <meta name="description" content="Privatisez le jardin, la piscine à débordement et la cuisine d'été des Acacias à Caveirac pour votre événement — 300 € la journée." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html#top" class="brand">
+        <span class="brand-mark">Les Acacias</span>
+        <span class="brand-sub" data-i18n="brand.sub">Caveirac · Gard</span>
+      </a>
+      <nav class="nav">
+        <a href="index.html#apartments" data-i18n="nav.apartments">Les appartements</a>
+        <a href="piscine.html" data-i18n="nav.pool">Piscine</a>
+        <a href="index.html#contact" data-i18n="nav.contact">Contact</a>
+        <div class="lang-toggle" role="group" aria-label="Language">
+          <button type="button" class="lang-btn active" data-lang="fr">FR</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="detail">
+      <a href="index.html" class="back-link" data-i18n="nav.back">← Retour à l’accueil</a>
+
+      <div class="detail-head">
+        <h1 data-i18n="evt.title">Vos événements aux Acacias</h1>
+        <p class="apt-meta" data-i18n="evt.meta">Jardin · Piscine · Cuisine d’été</p>
+        <p class="apt-price" data-flat-price="event"></p>
+        <p data-i18n="evt.desc">
+          Anniversaire, fête de famille, baptême, shooting photo… Le temps d'une journée, le jardin méditerranéen, la piscine à débordement et la cuisine d'été se privatisent pour vous. Dites-nous ce que vous imaginez : nous vous confirmons la disponibilité et les détails par e-mail.
+        </p>
+      </div>
+
+      <h2 class="detail-sub" data-i18n="evt.cond">Conditions &amp; inclus</h2>
+      <ul class="facilities">
+        <li data-i18n="evt.i1">Piscine, jardin, cuisine d'été et barbecue inclus (charbon non fourni)</li>
+        <li data-i18n="evt.i2">Ménage inclus</li>
+        <li data-i18n="evt.i3">Journée 9h – 18h ou soirée 19h – minuit (horaires adaptables sur demande)</li>
+        <li data-i18n="evt.i4">Jusqu'à 12 personnes</li>
+        <li data-i18n="evt.i5">Caution de 200 €</li>
+        <li data-i18n="evt.i6">Uniquement lorsque la résidence est libre de voyageurs</li>
+        <li data-i18n="evt.i7">Mineurs uniquement accompagnés d'un adulte</li>
+      </ul>
+
+      <div class="property-grid">
+        <div class="property-tile" data-photo="hero" style="--cover: url('photos/hero.jpg')">
+          <span data-i18n="nav.pool">Piscine</span>
+        </div>
+        <div class="property-tile" data-photo="jardin" style="--cover: url('photos/property/jardin.jpg')">
+          <span data-i18n="dom.garden">Le jardin</span>
+        </div>
+        <div class="property-tile" data-photo="cuisine-ete" style="--cover: url('photos/property/cuisine-ete.jpg')">
+          <span data-i18n="dom.kitchen">Cuisine d'été</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="reserve">
+      <div class="reserve-inner">
+        <p class="eyebrow" data-i18n="exp.eyebrow">Aussi aux Acacias</p>
+        <h2 data-i18n="evt.form.title">Demander une date</h2>
+        <p data-i18n="evt.form.text">Indiquez la date souhaitée et quelques mots sur votre événement — réponse rapide, sans engagement.</p>
+
+        <form class="booking" id="event-form" novalidate>
+          <div class="booking-grid">
+            <div class="field">
+              <label class="field-label" for="evt-date" data-i18n="evt.date">Date souhaitée</label>
+              <input type="date" id="evt-date" name="date" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="evt-guests" data-i18n="evt.guests">Nombre de personnes</label>
+              <input type="number" id="evt-guests" name="guests" min="1" max="12" value="10" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="evt-slot" data-i18n="evt.slot">Créneau</label>
+              <select id="evt-slot" name="slot">
+                <option value="day" data-i18n="evt.slot.day">Journée · 9h – 18h</option>
+                <option value="evening" data-i18n="evt.slot.evening">Soirée · 19h – minuit</option>
+                <option value="other" data-i18n="evt.slot.other">Autre (à préciser en message)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="evt-type" data-i18n="evt.type">Type d'événement</label>
+              <input type="text" id="evt-type" name="type" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="evt-name" data-i18n="book.name">Votre nom</label>
+              <input type="text" id="evt-name" name="name" autocomplete="name" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="evt-email" data-i18n="book.email">E-mail</label>
+              <input type="email" id="evt-email" name="email" autocomplete="email" />
+            </div>
+            <div class="field field-wide">
+              <label class="field-label" for="evt-phone" data-i18n="book.phone">Téléphone</label>
+              <input type="tel" id="evt-phone" name="phone" autocomplete="tel" />
+            </div>
+            <div class="field field-wide">
+              <label class="field-label" for="evt-message" data-i18n="book.message">Message (optionnel)</label>
+              <textarea id="evt-message" name="message" rows="3"></textarea>
+            </div>
+          </div>
+          <p class="booking-error" id="evt-error" hidden></p>
+          <button type="submit" class="btn btn-primary booking-submit" data-i18n="evt.submit">Envoyer ma demande</button>
+          <p class="est-note" data-i18n="evt.note">Nous confirmons la disponibilité par e-mail. Règlement sur place, sans paiement en ligne.</p>
+        </form>
+      </div>
+    </section>
+
+    <div class="lightbox" id="lightbox" aria-hidden="true">
+      <button class="lightbox-close" id="lightbox-close" aria-label="Fermer">×</button>
+      <button class="lightbox-prev" id="lightbox-prev" aria-label="Précédent">‹</button>
+      <button class="lightbox-next" id="lightbox-next" aria-label="Suivant">›</button>
+      <img class="lightbox-img" id="lightbox-img" alt="" />
+      <div class="lightbox-counter" id="lightbox-counter"></div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year"></span> Les Acacias · Caveirac</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

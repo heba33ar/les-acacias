@@ -13,26 +13,59 @@ Site vitrine pour Les Acacias, petite résidence de trois appartements à Caveir
 - ✅ Tarifs réels affichés (« Dès X € / nuit ») + estimation automatique
      dans le formulaire (base 2 personnes, +40 €/nuit par personne
      supplémentaire, ménage 50 €, taxe de séjour 1 €/pers/nuit)
-- ⏳ Paiement en ligne par carte (Stripe) + disponibilité en temps réel
-     — étape 2 (Vercel + Supabase)
-- ⏳ Synchronisation des calendriers Airbnb / Booking / Abritel — étape 3
-- ⏳ Portail admin, pages Événements et Piscine — étapes suivantes
+- ✅ **Disponibilités synchronisées Airbnb / Booking** : calendrier visuel
+     sur chaque page appartement + vérification des dates dans le
+     formulaire, via les liens iCal (lecture seule, rafraîchi toutes les
+     heures) → **à mettre en ligne en suivant `SETUP.md`**
+- ✅ **Demande de réservation par e-mail** : pas de paiement en ligne,
+     pas de compte client, aucune donnée stockée — vous confirmez chaque
+     demande vous-même
+- ✅ **Page Événements** (`evenements.html`) : privatisation à la journée,
+     300 €, demande par e-mail, règlement sur place
+- ✅ **Page Piscine** (`piscine.html`) : entrée à la journée, 25 €/personne,
+     demande par e-mail, règlement sur place
+
+- ✅ **Espace admin** (`admin.html`) : modification des textes FR/EN,
+     des photos et des tarifs sans toucher au code — connexion par lien
+     magique e-mail (voir `SETUP.md`, section « Espace admin »)
+
+## Comment ça marche
+- Le site est statique (HTML/CSS/JS). Une seule fonction serveur,
+  `api/availability.js`, lit vos calendriers Airbnb/Booking (liens iCal
+  dans les réglages Vercel) et répond « libre / occupé ». Elle ne stocke
+  rien et ne peut rien modifier.
+- Toute réservation directe se conclut par e-mail : vous bloquez ensuite
+  les dates sur Airbnb ou Booking, et le site les affiche occupées à la
+  prochaine synchronisation (au plus 1 heure).
+- L'espace admin enregistre les contenus personnalisés dans Supabase
+  (`site_content` + photos dans le stockage). Le site public les lit en
+  lecture seule via `config.js` ; si rien n'est personnalisé, il garde
+  les textes/photos/tarifs écrits dans le code.
+- `QUESTIONS-TARIFS.md` : la liste des questions à faire valider par le
+  propriétaire avant d'affiner les tarifs.
 
 ## Tarifs et frais
 Tous les montants se règlent **en un seul endroit** : en haut de `script.js`,
 dans le bloc `BOOKING_CONFIG` :
-- `nightlyRate` — prix par nuit (base 2 personnes) : 200 € / 180 € / 160 €
-- `baseGuests` / `extraGuestPerNight` — 2 personnes incluses, +40 €/nuit
+- `nightlyRate` — prix par nuit (base 2 personnes) : 150 € / 130 € / 110 €
+- `baseGuests` / `extraGuestPerNight` — 2 personnes incluses, +30 €/nuit
   par personne supplémentaire
-- `cleaningFee` — frais de ménage par séjour : 50 €
+- `weekDiscountPct` / `monthDiscountPct` — −10 % dès 7 nuits, −15 % dès 28 nuits
+- `cleaningFee` — frais de ménage par séjour : 40 €
 - `minNights` — séjour minimum : 1 nuit
-- `touristTaxPerPersonPerNight` — taxe de séjour : 1 € (par personne et par nuit)
+- `touristTaxPerPersonPerNight` — taxe de séjour : 3,30 € (par personne et par nuit)
+- `securityDeposit` — dépôt de garantie : 290 €
 - `maxGuests` — capacité : 6 / 6 / 4 personnes
+- `eventPrice` — événement (journée ou soirée) : 300 €
+- `poolPricePerPerson` — piscine : 25 € par personne et par créneau
 
-> ⚠️ Important : cette version envoie une **demande** par e-mail ; elle ne
-> prend pas le paiement et ne vérifie pas la disponibilité en temps réel.
-> Le paiement par carte (Stripe Checkout, acompte de 100 €) et la
-> disponibilité automatique arrivent à l'étape 2 (Vercel + Supabase).
+Le détail complet des conditions validées par le propriétaire est dans
+`QUESTIONS-TARIFS.md`. Une fois l'espace admin branché, tout se modifie
+depuis `admin.html` (onglet Tarifs).
+
+> Le site envoie des **demandes** par e-mail (séjours, événements,
+> piscine) — aucun paiement en ligne. Les prix affichés sont indicatifs ;
+> vous confirmez le tarif exact en répondant au client.
 
 ## Lancer le site en local
 Aucune installation nécessaire — c'est un site statique :
