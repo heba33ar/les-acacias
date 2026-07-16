@@ -74,6 +74,8 @@ function fillPrices(lang) {
    Sinon — ou hors ligne — il garde ceux écrits dans ce fichier.
    ============================================================ */
 const SITE_DB = window.ACACIAS_SUPABASE || {};
+// Tolère une URL collée avec /rest/v1/ ou un / final
+if (SITE_DB.url) SITE_DB.url = SITE_DB.url.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
 if (SITE_DB.url && SITE_DB.anonKey) {
   fetch(`${SITE_DB.url}/rest/v1/site_content?select=key,value`, {
     headers: { apikey: SITE_DB.anonKey, Authorization: `Bearer ${SITE_DB.anonKey}` },
@@ -977,6 +979,31 @@ if (bookingForm) {
         `${L.total}: ${n * BOOKING_CONFIG.poolPricePerPerson} € (${n} × ${BOOKING_CONFIG.poolPricePerPerson} €)`,
       ]);
     });
+  }
+})();
+
+/* ============================================================
+   Ancre « Réserver » — toujours atterrir EN HAUT de la section,
+   même quand les photos au-dessus se chargent et décalent la page.
+   ============================================================ */
+(function () {
+  const reserveSection = document.getElementById('reserve');
+  const scrollToReserve = () => reserveSection.scrollIntoView({ block: 'start' });
+
+  if (reserveSection) {
+    // Clic sur n'importe quel lien « Réserver » de la même page
+    document.querySelectorAll('a[href$="#reserve"]').forEach((a) => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        scrollToReserve();
+        history.replaceState(null, '', '#reserve');
+      });
+    });
+    // Arrivée depuis une autre page (ex. « Réserver cet appartement ») :
+    // on recale la position une fois toutes les images chargées.
+    if (window.location.hash === '#reserve') {
+      window.addEventListener('load', () => setTimeout(scrollToReserve, 60));
+    }
   }
 })();
 

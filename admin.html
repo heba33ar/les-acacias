@@ -129,6 +129,8 @@
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
     const conf = window.ACACIAS_SUPABASE || {};
+    // Tolère une URL collée avec /rest/v1/ ou un / final
+    if (conf.url) conf.url = conf.url.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
     const $ = (id) => document.getElementById(id);
     const show = (id) => {
       ['admin-unconfigured', 'admin-login', 'admin-app'].forEach((s) => { $(s).hidden = s !== id; });
