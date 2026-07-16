@@ -76,17 +76,22 @@ function fillPrices(lang) {
 const SITE_DB = window.ACACIAS_SUPABASE || {};
 // Tolère une URL collée avec /rest/v1/ ou un / final
 if (SITE_DB.url) SITE_DB.url = SITE_DB.url.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
-if (SITE_DB.url && SITE_DB.anonKey) {
-  fetch(`${SITE_DB.url}/rest/v1/site_content?select=key,value`, {
-    headers: { apikey: SITE_DB.anonKey, Authorization: `Bearer ${SITE_DB.anonKey}` },
-  })
-    .then((r) => (r.ok ? r.json() : null))
-    .then((rows) => {
-      if (!rows || !rows.length) return;
-      applySiteContent(Object.fromEntries(rows.map((r) => [r.key, r.value])));
+
+// Promesse partagée : le contenu personnalisé (textes/photos/tarifs/blocages),
+// utilisée aussi par le calendrier et le mode édition (edit.js).
+window.ACACIAS_CONTENT_READY = (SITE_DB.url && SITE_DB.anonKey)
+  ? fetch(`${SITE_DB.url}/rest/v1/site_content?select=key,value`, {
+      headers: { apikey: SITE_DB.anonKey, Authorization: `Bearer ${SITE_DB.anonKey}` },
     })
-    .catch(() => {});
-}
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rows) => Object.fromEntries((rows || []).map((r) => [r.key, r.value])))
+      .catch(() => ({}))
+  : Promise.resolve({});
+
+window.ACACIAS_CONTENT_READY.then((content) => {
+  window.ACACIAS_CONTENT = content;
+  if (Object.keys(content).length) applySiteContent(content);
+});
 
 function applySiteContent(content) {
   // Textes (FR/EN) — remplacent ceux du dictionnaire ci-dessous
@@ -120,12 +125,10 @@ function applySiteContent(content) {
     const ph = content.photos;
     document.querySelectorAll('[data-photo]').forEach((el) => {
       const key = el.dataset.photo;
-      let url = null;
-      if (key.startsWith('cover-')) {
+      let url = ph[key] || null;
+      if (!url && key.startsWith('cover-')) {
         const list = ph.galleries && ph.galleries['apartment-' + key.slice(6)];
         url = (Array.isArray(list) && list[0]) || null;
-      } else {
-        url = ph[key] || null;
       }
       if (!url) return;
       if (el.classList.contains('apt-card-photo') || el.classList.contains('property-tile')) {
@@ -520,7 +523,8 @@ document.querySelectorAll('.lang-btn').forEach((btn) => {
 });
 
 const saved = (() => { try { return localStorage.getItem('acacias-lang'); } catch (_) { return null; } })();
-const initial = saved || (navigator.language && navigator.language.startsWith('en') ? 'en' : 'fr');
+// Français par défaut ; l'anglais uniquement si le visiteur l'a choisi.
+const initial = saved === 'en' ? 'en' : 'fr';
 setLanguage(initial);
 
 document.getElementById('year').textContent = new Date().getFullYear();
@@ -775,6 +779,19 @@ if (bookingForm) {
     }
     avBox.textContent = t.checking;
     avBox.className = 'booking-availability';
+
+    // 1) Blocages manuels posés par l'admin (stockés dans Supabase)
+    try {
+      const content = await (window.ACACIAS_CONTENT_READY || Promise.resolve({}));
+      const manual = (content.blocks && content.blocks[aptSel.value]) || [];
+      if (manual.some((b) => b.start < checkout.value && b.end > checkin.value)) {
+        avBox.textContent = t.unavailable;
+        avBox.className = 'booking-availability ko';
+        return;
+      }
+    } catch (_) {}
+
+    // 2) Calendriers Airbnb/Booking (API)
     try {
       const r = await fetch(`/api/availability?apartment=${aptSel.value}&checkin=${checkin.value}&checkout=${checkout.value}`);
       if (!r.ok) throw new Error();
@@ -830,24 +847,45 @@ if (bookingForm) {
   const MONTHS_AHEAD = 8; // combien de mois on charge et on peut feuilleter
   const isoDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
-  document.querySelectorAll('.availability-cal').forEach((el) => {
+  // Registre des calendriers affichés — utilisé par le mode édition (edit.js)
+  // pour bloquer/débloquer des dates à la main.
+  window.ACACIAS_CALS = [];
+
+  const hasAdminSession = (() => {
+    try { return Object.keys(localStorage).some((k) => k.startsWith('sb-') && k.includes('auth-token')); }
+    catch (_) { return false; }
+  })();
+
+  document.querySelectorAll('.availability-cal').forEach(async (el) => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     const from = isoDate(today);
     const to = isoDate(new Date(today.getFullYear(), today.getMonth() + MONTHS_AHEAD, 1));
-    const hide = () => { const s = el.closest('.cal-section'); if (s) s.hidden = true; };
+    const apt = el.dataset.apt;
 
-    fetch(`/api/availability?apartment=${el.dataset.apt}&from=${from}&to=${to}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (!d || d.configured === false || !Array.isArray(d.busy)) { hide(); return; }
-        initCalendar(el, d.busy, today);
-      })
-      .catch(hide);
+    // Deux sources : les calendriers Airbnb/Booking (API) et les blocages
+    // manuels posés depuis le mode édition (Supabase).
+    const [api, content] = await Promise.all([
+      fetch(`/api/availability?apartment=${apt}&from=${from}&to=${to}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null),
+      window.ACACIAS_CONTENT_READY || Promise.resolve({}),
+    ]);
+    const apiBusy = api && api.configured !== false && Array.isArray(api.busy) ? api.busy : null;
+    const manual = (content.blocks && content.blocks[apt]) || [];
+
+    // Rien à montrer et pas d'admin connecté : on masque la section.
+    if (!apiBusy && !manual.length && !hasAdminSession) {
+      const s = el.closest('.cal-section'); if (s) s.hidden = true;
+      return;
+    }
+    initCalendar(el, apt, apiBusy || [], manual, today);
   });
 
-  function initCalendar(el, busy, today) {
+  function initCalendar(el, apt, busy, manual, today) {
     const todayStr = isoDate(today);
-    const isBusy = (dateStr) => busy.some((r) => r.start <= dateStr && dateStr < r.end);
+    const inRanges = (list, dateStr) => list.some((r) => r.start <= dateStr && dateStr < r.end);
+    const isBusy = (dateStr) => inRanges(busy, dateStr);
+    const isManual = (dateStr) => inRanges(manual, dateStr);
     let offset = 0; // premier mois affiché (0 = mois en cours)
 
     function monthHTML(year, month) {
@@ -867,7 +905,8 @@ if (bookingForm) {
         let cls = 'cal-day';
         if (dateStr < todayStr) cls += ' past';
         else if (isBusy(dateStr)) cls += ' busy';
-        cells += `<span class="${cls}">${day}</span>`;
+        else if (isManual(dateStr)) cls += ' busy manual';
+        cells += `<span class="${cls}" data-date="${dateStr}">${day}</span>`;
       }
       return `<div class="cal-month"><div class="cal-month-label">${label}</div><div class="cal-grid">${cells}</div></div>`;
     }
@@ -888,6 +927,8 @@ if (bookingForm) {
     render();
     // Re-rendu dans la bonne langue quand on change FR/EN
     document.querySelectorAll('.lang-btn').forEach((btn) => btn.addEventListener('click', () => setTimeout(render, 0)));
+    // À disposition du mode édition (edit.js)
+    window.ACACIAS_CALS.push({ el, apt, manual, render });
   }
 })();
 

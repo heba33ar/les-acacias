@@ -119,3 +119,16 @@ Il repose sur Supabase (gratuit). Comptez 15 minutes.
 c'est limité à quelques envois par heure — largement assez pour un
 usage personnel, mais si le lien n'arrive pas, attendez un peu et
 regardez les spams. Le lien reste valable 1 heure.
+
+## Ajouter (ou retirer) un admin
+
+Deux étapes, les deux sont obligatoires :
+
+1. **Autoriser l'adresse** : ouvrez `supabase-admin.sql`, ajoutez
+   l'adresse dans la liste de la fonction `is_site_admin()` (la ligne
+   d'exemple montre comment), puis recollez **tout le script** dans
+   SQL Editor → Run. Pour retirer un admin, enlevez la ligne et Run.
+2. **Créer son compte** : Authentication → Users → Add user →
+   son e-mail + **Auto Confirm User** (les inscriptions étant fermées,
+   c'est le seul moyen d'entrer). Pour retirer l'accès, supprimez
+   aussi l'utilisateur ici.

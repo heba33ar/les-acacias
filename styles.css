@@ -884,6 +884,70 @@ section { scroll-margin-top: 84px; }
 }
 
 /* ============================================================
+   Mode édition (admins connectés uniquement — voir edit.js)
+   ============================================================ */
+.edit-toolbar {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  background: var(--pine-deep);
+  color: var(--cream);
+  padding: .7rem .9rem;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+  font-size: .8rem;
+  max-width: min(92vw, 460px);
+}
+.edit-toolbar button {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: var(--cream);
+  font: inherit;
+  font-size: .74rem;
+  letter-spacing: .08em;
+  padding: .5rem .95rem;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+.edit-toolbar button:hover { background: rgba(255, 255, 255, 0.12); }
+.edit-toolbar .et-save {
+  background: var(--cream);
+  color: var(--pine-deep);
+  border-color: var(--cream);
+  font-weight: 600;
+}
+.edit-toolbar .et-admin { color: var(--cream-soft); font-size: .72rem; }
+.edit-toolbar .et-admin:hover { color: #fff; }
+.edit-toolbar .et-status {
+  flex-basis: 100%;
+  font-size: .72rem;
+  line-height: 1.45;
+  color: var(--cream-soft);
+}
+
+.acacias-editing [data-i18n] {
+  outline: 1px dashed rgba(179, 87, 63, 0.75);
+  outline-offset: 2px;
+  cursor: text;
+}
+.acacias-editing [data-photo] {
+  outline: 2px dashed rgba(179, 87, 63, 0.85);
+  outline-offset: -2px;
+  cursor: pointer;
+}
+.acacias-editing .lang-toggle { pointer-events: none; opacity: .35; }
+.acacias-editing .cal-day:not(.past) { cursor: pointer; }
+.acacias-editing .cal-day:not(.past):not(.busy):hover { box-shadow: inset 0 0 0 2px var(--moss); }
+
+/* Jour bloqué manuellement (distinct des réservations Airbnb/Booking) */
+.cal-day.manual { box-shadow: inset 0 0 0 1px var(--stone); }
+
+/* ============================================================
    Visionneuse (lightbox)
    ============================================================ */
 .lightbox {
